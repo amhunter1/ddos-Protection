@@ -9,10 +9,7 @@ const path = require('path');
 
 class DDoSProtection {
   constructor(options = {}) {
-    // Validate configuration options
     this.validateOptions(options);
-
-    // Configuration options with defaults
     this.options = {
       // Rate limiting
       maxRequestsPerMinute: options.maxRequestsPerMinute || 100,
@@ -75,46 +72,32 @@ class DDoSProtection {
       dataRetention: options.dataRetention || 86400000 // 24 hours
     };
 
-    // Initialize Redis client with error handling
     this.redisClient = null;
     this.redisAvailable = false;
     this.initializeRedis();
-    
-    // Initialize data structures
     this.requestCounts = new Map();
     this.blockedIPs = new Map();
     this.connectionCounts = new Map();
     this.userAgentStats = new Map();
     this.geoStats = new Map();
     this.suspiciousActivities = new Map();
-    
-    // Initialize logging
     this.initializeLogging();
-    
-    // Start cleanup interval
     this.startCleanupInterval();
-    
-    // Load configuration files if they exist
     this.loadConfiguration();
   }
 
-  // Validate configuration options
   validateOptions(options) {
-    // Validate numeric options
     const numericOptions = [
       'maxRequestsPerMinute', 'maxRequestsPerHour', 'maxRequestsPerDay',
       'burstThreshold', 'burstWindow', 'blockDuration', 'maxFailedAttempts',
       'maxURILength', 'maxConnectionsPerIP', 'blockResponseCode',
       'cleanupInterval', 'dataRetention'
     ];
-
     for (const option of numericOptions) {
       if (options[option] !== undefined && (typeof options[option] !== 'number' || options[option] < 0)) {
         throw new Error(`Invalid ${option}: must be a positive number`);
       }
     }
-
-    // Validate array options
     const arrayOptions = [
       'blockedCountries', 'allowedCountries', 'blockedUserAgents',
       'suspiciousUserAgents', 'whitelistedIPs', 'whitelistedUserAgents'
@@ -125,8 +108,6 @@ class DDoSProtection {
         throw new Error(`Invalid ${option}: must be an array`);
       }
     }
-
-    // Validate string options
     const stringOptions = ['maxRequestSize', 'logLevel', 'logFilePath', 'blockMessage'];
 
     for (const option of stringOptions) {
@@ -134,13 +115,9 @@ class DDoSProtection {
         throw new Error(`Invalid ${option}: must be a string`);
       }
     }
-
-    // Validate log level
     if (options.logLevel && !['debug', 'info', 'warn', 'error'].includes(options.logLevel)) {
       throw new Error('Invalid logLevel: must be one of debug, info, warn, error');
     }
-
-    // Validate boolean options
     const booleanOptions = [
       'logToFile', 'enableCaptcha', 'enableJSChallenge',
       'enableHeuristicAnalysis', 'enableBehavioralAnalysis'
@@ -151,8 +128,6 @@ class DDoSProtection {
         throw new Error(`Invalid ${option}: must be a boolean`);
       }
     }
-
-    // Validate Redis configuration
     if (options.redis) {
       if (typeof options.redis !== 'object') {
         throw new Error('Invalid redis: must be an object');
@@ -171,7 +146,6 @@ class DDoSProtection {
       }
     }
 
-    // Validate size format
     if (options.maxRequestSize) {
       const sizeRegex = /^(\d+)([a-z]+)$/i;
       if (!sizeRegex.test(options.maxRequestSize)) {
@@ -179,7 +153,6 @@ class DDoSProtection {
       }
     }
 
-    // Validate country codes
     if (options.blockedCountries) {
       for (const country of options.blockedCountries) {
         if (typeof country !== 'string' || country.length !== 2) {
@@ -197,12 +170,10 @@ class DDoSProtection {
     }
   }
 
-  // Initialize Redis with graceful degradation
   async initializeRedis() {
     try {
       this.redisClient = new redis(this.options.redis);
 
-      // Set up error handling
       this.redisClient.on('error', (error) => {
         this.log('warn', `Redis connection error: ${error.message}`);
         this.redisAvailable = false;
@@ -249,11 +220,9 @@ class DDoSProtection {
     }
   }
 
-  // Initialize logging system
   async initializeLogging() {
     if (this.options.logToFile) {
       try {
-        // Create logs directory if it doesn't exist
         const logDir = path.dirname(this.options.logFilePath);
         await fs.mkdir(logDir, { recursive: true });
       } catch (error) {
@@ -297,7 +266,6 @@ class DDoSProtection {
     }
   }
 
-  // Main middleware function
   async middleware(req, res, next) {
     const clientIP = this.getClientIP(req);
     const userAgent = req.get('User-Agent') || '';
@@ -332,7 +300,6 @@ class DDoSProtection {
         return this.sendBlockResponse(res, validation.reason);
       }
       
-      // Check geographic restrictions
       const geoCheck = this.checkGeographicRestrictions(clientIP);
       if (!geoCheck.allowed) {
         this.log('warn', `Geographic restriction for ${clientIP}: ${geoCheck.reason}`, { 
@@ -343,7 +310,6 @@ class DDoSProtection {
         return this.sendBlockResponse(res, geoCheck.reason);
       }
       
-      // Check user agent
       const userAgentCheck = this.checkUserAgent(userAgent);
       if (!userAgentCheck.allowed) {
         this.log('warn', `Blocked user agent from ${clientIP}: ${userAgent}`, { 
@@ -353,8 +319,6 @@ class DDoSProtection {
         });
         return this.sendBlockResponse(res, userAgentCheck.reason);
       }
-      
-      // Update connection count
       const connectionCheck = await this.updateConnectionCount(clientIP);
       if (!connectionCheck.allowed) {
         this.log('warn', `Too many connections from ${clientIP}`, { 
@@ -364,8 +328,6 @@ class DDoSProtection {
         });
         return this.sendBlockResponse(res, 'TOO_MANY_CONNECTIONS');
       }
-      
-      // Update request counts
       const rateCheck = await this.updateRequestCounts(clientIP, timestamp);
       if (!rateCheck.allowed) {
         this.log('warn', `Rate limit exceeded for ${clientIP}`, { 
@@ -375,8 +337,6 @@ class DDoSProtection {
         });
         return this.sendBlockResponse(res, 'RATE_LIMIT_EXCEEDED');
       }
-      
-      // Advanced detection
       if (this.options.enableHeuristicAnalysis) {
         const heuristicCheck = this.performHeuristicAnalysis(req, clientIP);
         if (!heuristicCheck.allowed) {
@@ -389,7 +349,6 @@ class DDoSProtection {
         }
       }
       
-      // Behavioral analysis
       if (this.options.enableBehavioralAnalysis) {
         const behaviorCheck = await this.performBehavioralAnalysis(clientIP, req);
         if (!behaviorCheck.allowed) {
@@ -402,13 +361,8 @@ class DDoSProtection {
         }
       }
       
-      // If we get here, the request is allowed
       this.log('debug', `Allowed request from ${clientIP}`, { requestId, clientIP, method, url });
-      
-      // Add security headers
       this.addSecurityHeaders(res);
-      
-      // Continue to next middleware
       next();
     } catch (error) {
       this.log('error', `Error processing request from ${clientIP}: ${error.message}`, { 
@@ -416,9 +370,6 @@ class DDoSProtection {
         clientIP, 
         error: error.stack 
       });
-      
-      // In case of error, we'll still allow the request to proceed
-      // but log the error for investigation
       next();
     }
   }
@@ -471,11 +422,9 @@ class DDoSProtection {
     if (blocked) {
       const blockInfo = JSON.parse(blocked);
       if (Date.now() < blockInfo.expires) {
-        // Update in-memory cache
         this.blockedIPs.set(ip, blockInfo);
         return true;
       } else {
-        // Block expired, remove it
         await this.safeRedisOperation(() => this.redisClient.del(`blocked:${ip}`));
       }
     }
@@ -483,17 +432,13 @@ class DDoSProtection {
     return false;
   }
 
-  // Validate request structure
   validateRequest(req) {
-    // Check URI length
     if (req.url.length > this.options.maxURILength) {
       return { 
         valid: false, 
         reason: 'URI_TOO_LONG' 
       };
     }
-    
-    // Check request size (approximate)
     const contentLength = req.headers['content-length'];
     if (contentLength) {
       const maxSizeBytes = this.parseSize(this.options.maxRequestSize);
@@ -505,7 +450,6 @@ class DDoSProtection {
       }
     }
     
-    // Check for suspicious headers
     const suspiciousHeaders = [
       'x-forwarded-for',
       'x-original-host',
@@ -525,7 +469,6 @@ class DDoSProtection {
     return { valid: true };
   }
 
-  // Parse size string to bytes
   parseSize(sizeStr) {
     const units = {
       'b': 1,
@@ -544,7 +487,6 @@ class DDoSProtection {
     return parseInt(sizeStr) || 0;
   }
 
-  // Check geographic restrictions
   checkGeographicRestrictions(ip) {
     try {
       const geo = geoip.lookup(ip);
@@ -573,7 +515,6 @@ class DDoSProtection {
         };
       }
       
-      // Update geo stats
       if (!this.geoStats.has(country)) {
         this.geoStats.set(country, { requests: 0, blocked: 0 });
       }
@@ -587,7 +528,6 @@ class DDoSProtection {
     }
   }
 
-  // Check user agent
   checkUserAgent(userAgent) {
     // Check blocked user agents
     if (this.options.blockedUserAgents.some(bua => userAgent.includes(bua))) {
@@ -605,7 +545,6 @@ class DDoSProtection {
       };
     }
     
-    // Update user agent stats
     if (!this.userAgentStats.has(userAgent)) {
       this.userAgentStats.set(userAgent, { requests: 0, blocked: 0 });
     }
@@ -615,14 +554,10 @@ class DDoSProtection {
     return { allowed: true };
   }
 
-  // Update connection count
   async updateConnectionCount(ip) {
-    // Update in-memory connection count
     let count = this.connectionCounts.get(ip) || 0;
     count++;
     this.connectionCounts.set(ip, count);
-
-    // Update Redis connection count
     const redisKey = `connections:${ip}`;
     const redisCount = await this.safeRedisOperation(
       async () => {
@@ -651,7 +586,6 @@ class DDoSProtection {
     const hourKey = `requests:${ip}:hour:${Math.floor(now / 3600000)}`;
     const dayKey = `requests:${ip}:day:${Math.floor(now / 86400000)}`;
 
-    // Increment counters in Redis with fallback
     const [minuteCount, hourCount, dayCount] = await this.safeRedisOperation(
       async () => {
         const [min, hour, day] = await Promise.all([
@@ -659,8 +593,6 @@ class DDoSProtection {
           this.redisClient.incr(hourKey),
           this.redisClient.incr(dayKey)
         ]);
-
-        // Set expiration times
         await Promise.all([
           this.redisClient.expire(minuteKey, 120), // 2 minutes
           this.redisClient.expire(hourKey, 3900),  // 65 minutes
@@ -698,7 +630,6 @@ class DDoSProtection {
     const acceptEncoding = req.get('Accept-Encoding') || '';
     const acceptLanguage = req.get('Accept-Language') || '';
     
-    // Check for missing headers (bots often don't send all headers)
     const requiredHeaders = ['accept', 'accept-encoding', 'accept-language'];
     let missingHeaders = 0;
     
@@ -711,7 +642,6 @@ class DDoSProtection {
       return { allowed: false, reason: 'MISSING_REQUIRED_HEADERS' };
     }
     
-    // Check for suspicious patterns in URL
     const suspiciousPatterns = [
       /(\.php|\.asp|\.jsp)/i,
       /(\.\.\/)/,
@@ -735,32 +665,22 @@ class DDoSProtection {
     return { allowed: true };
   }
 
-  // Perform behavioral analysis
   async performBehavioralAnalysis(ip, req) {
-    // This is a simplified version - in a real implementation,
-    // this would be much more complex and involve machine learning
-
     const now = Date.now();
     const key = `behavior:${ip}`;
-
-    // Get previous request timestamps with fallback
     const timestamps = await this.safeRedisOperation(
       () => this.redisClient.lrange(key, 0, 99),
       () => []
     );
     const timestampsMs = timestamps.map(ts => parseInt(ts));
-
-    // Add current timestamp
     await this.safeRedisOperation(
       async () => {
         await this.redisClient.lpush(key, now);
         await this.redisClient.ltrim(key, 0, 99);
         await this.redisClient.expire(key, 3600);
       },
-      () => {} // No fallback needed for write operations
+      () => {}
     );
-
-    // Check for burst activity
     if (timestampsMs.length >= 10) {
       const recentTimestamps = timestampsMs.slice(0, 10);
       const timeDiff = recentTimestamps[0] - recentTimestamps[9];
@@ -776,8 +696,6 @@ class DDoSProtection {
 
     return { allowed: true };
   }
-
-  // Increment suspicious activity counter
   incrementSuspiciousActivity(ip, reason) {
     if (!this.suspiciousActivities.has(ip)) {
       this.suspiciousActivities.set(ip, new Map());
@@ -786,15 +704,11 @@ class DDoSProtection {
     const ipActivities = this.suspiciousActivities.get(ip);
     const count = ipActivities.get(reason) || 0;
     ipActivities.set(reason, count + 1);
-    
-    // If too many suspicious activities, block IP
     const totalCount = Array.from(ipActivities.values()).reduce((sum, val) => sum + val, 0);
     if (totalCount > this.options.maxFailedAttempts) {
       this.blockIP(ip, 'TOO_MANY_SUSPICIOUS_ACTIVITIES');
     }
   }
-
-  // Block an IP address
   async blockIP(ip, reason) {
     const expires = Date.now() + this.options.blockDuration;
     const blockInfo = {
@@ -803,21 +717,15 @@ class DDoSProtection {
       timestamp: Date.now(),
       expires
     };
-
-    // Store in memory
     this.blockedIPs.set(ip, blockInfo);
-
-    // Store in Redis with fallback
     await this.safeRedisOperation(
       () => this.redisClient.setex(
         `blocked:${ip}`,
         Math.ceil(this.options.blockDuration / 1000),
         JSON.stringify(blockInfo)
       ),
-      () => {} // No fallback needed for write operations
+      () => {}
     );
-
-    // Update geo stats if available
     try {
       const geo = geoip.lookup(ip);
       if (geo && this.geoStats.has(geo.country)) {
@@ -825,13 +733,11 @@ class DDoSProtection {
         stats.blocked++;
       }
     } catch (error) {
-      // Ignore geo lookup errors
     }
 
     this.log('info', `Blocked IP ${ip} for reason: ${reason}`, { ip, reason });
   }
 
-  // Send block response
   sendBlockResponse(res, reason) {
     res.status(this.options.blockResponseCode).json({
       error: this.options.blockMessage,
@@ -839,8 +745,6 @@ class DDoSProtection {
       timestamp: new Date().toISOString()
     });
   }
-
-  // Add security headers
   addSecurityHeaders(res) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
@@ -848,8 +752,6 @@ class DDoSProtection {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     res.setHeader('Content-Security-Policy', "default-src 'self'");
   }
-
-  // Log messages
   log(level, message, data = {}) {
     if (this.shouldLog(level)) {
       const logEntry = {
@@ -858,18 +760,12 @@ class DDoSProtection {
         message,
         data
       };
-
-      // Console output
       console.log(`[${level.toUpperCase()}] ${message}`, data);
-
-      // File logging
       if (this.options.logToFile) {
         this.writeToFile(logEntry);
       }
     }
   }
-
-  // Check if message should be logged based on log level
   shouldLog(level) {
     const levels = ['debug', 'info', 'warn', 'error'];
     const currentLevelIndex = levels.indexOf(this.options.logLevel);
@@ -877,8 +773,6 @@ class DDoSProtection {
 
     return messageLevelIndex >= currentLevelIndex;
   }
-
-  // Write log entry to file
   async writeToFile(logEntry) {
     try {
       const logLine = JSON.stringify(logEntry) + '\n';
@@ -887,27 +781,19 @@ class DDoSProtection {
       console.error('Failed to write to log file:', error);
     }
   }
-
-  // Start cleanup interval
   startCleanupInterval() {
     setInterval(() => {
       const now = Date.now();
-
-      // Clean up expired blocked IPs
       for (const [ip, blockInfo] of this.blockedIPs.entries()) {
         if (now > blockInfo.expires) {
           this.blockedIPs.delete(ip);
         }
       }
-
-      // Clean up connection counts
       for (const [ip, count] of this.connectionCounts.entries()) {
         if (count <= 0) {
           this.connectionCounts.delete(ip);
         }
       }
-
-      // Clean up suspicious activities
       for (const [ip, activities] of this.suspiciousActivities.entries()) {
         let totalCount = 0;
         for (const [reason, count] of activities.entries()) {
@@ -958,8 +844,6 @@ class DDoSProtection {
         blocked.push(JSON.parse(data));
       }
     }
-
-    // Also include in-memory blocked IPs
     for (const [ip, blockInfo] of this.blockedIPs.entries()) {
       if (!blocked.some(b => b.ip === ip)) {
         blocked.push(blockInfo);
@@ -989,19 +873,15 @@ class DDoSProtection {
     }
   }
 }
-
-// Create middleware function
 const createDDoSProtection = (options) => {
   const protection = new DDoSProtection(options);
   
-  // Return middleware function
   return async (req, res, next) => {
     await protection.middleware(req, res, next);
   };
 };
-
-// Export both the class and the middleware creator
 module.exports = {
   DDoSProtection,
   createDDoSProtection
 };
+
