@@ -3,17 +3,11 @@ const { createDDoSProtection } = require('../middleware/ddosProtection');
 const helmet = require('helmet');
 const cors = require('cors');
 require('dotenv').config();
-
-// Create Express app
 const app = express();
-
-// Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Cross-origin resource sharing
-app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
-
-// Create DDoS protection middleware with custom options
+app.use(helmet());
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const ddosProtection = createDDoSProtection({
   // Rate limiting
   maxRequestsPerMinute: 60,
@@ -67,8 +61,6 @@ const ddosProtection = createDDoSProtection({
   blockResponseCode: 429,
   blockMessage: 'Too Many Requests - DDoS Protection Activated'
 });
-
-// Apply DDoS protection middleware to all routes
 app.use(ddosProtection);
 
 // Routes
@@ -150,3 +142,4 @@ process.on('SIGINT', () => {
 });
 
 module.exports = app;
+
