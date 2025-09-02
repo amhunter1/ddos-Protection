@@ -25,7 +25,7 @@ A comprehensive, production-ready DDoS protection middleware for Node.js applica
 ## Kurulum (Installation)
 
 ```bash
-npm install ddos-protection-system
+repoyu indirin (download repo)
 ```
 
 ## Hızlı Başlangıç (Quick Start)
