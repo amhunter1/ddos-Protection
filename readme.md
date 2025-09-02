@@ -515,18 +515,6 @@ MIT License - LICENSE dosyasını inceleyin
 ## Destek (Support)
 
 Destek ve sorularınız için:
-- GitHub Issues: [Issue açın](https://github.com/your-repo/issues)
-- Dokümantasyon: [Tam API Referansı](https://your-docs-site.com)
-- Email: support@your-domain.com
-
-## Changelog
-
-### v1.0.0
-- İlk sürüm
-- Rate limiting ve burst protection
-- Geographic filtering
-- Redis entegrasyonu ile graceful degradation
-- Kapsamlı loglama ve monitoring
-- Express, Koa, Fastify framework desteği
-- Konfigürasyon validasyonu
-- Güvenlik header'ları ve istek validasyonu
+- GitHub Issues: [Issue açın](https://github.com/amhunter1/ddos-Protection/issues)
+- Email: gfwilliamtr@gmail.com
+- Discord: gfwilliam
