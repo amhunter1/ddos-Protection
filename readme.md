@@ -1,9 +1,9 @@
-# DDoS Protection System for Node.js
+# DoS Protection System for Node.js
 
-[![npm version](https://badge.fury.io/js/ddos-Protection.svg)](https://badge.fury.io/js/ddos-Protection)
+[![npm version](https://badge.fury.io/js/dos-Protection.svg)](https://badge.fury.io/js/dos-Protection)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive, production-ready DDoS protection middleware for Node.js applications with advanced detection capabilities, rate limiting, geographic filtering, and behavioral analysis.
+A comprehensive, production-ready dos protection middleware for Node.js applications with advanced detection capabilities, rate limiting, geographic filtering, and behavioral analysis.
 
 ## Özellikler (Features)
 
@@ -34,12 +34,12 @@ repoyu indirin (download repo)
 
 ```javascript
 const express = require('express');
-const { createDDoSProtection } = require('ddos-protection-system');
+const { createDoSProtection } = require('dos-protection-system');
 
 const app = express();
 
-// DDoS koruması ekle
-app.use(createDDoSProtection({
+// DoS koruması ekle
+app.use(createDoSProtection({
   maxRequestsPerMinute: 100,
   maxRequestsPerHour: 1000,
   blockedCountries: ['CN', 'RU'],
@@ -63,11 +63,11 @@ app.listen(3000, () => {
 
 ```javascript
 const Koa = require('koa');
-const { createKoaMiddleware } = require('ddos-protection-system');
+const { createKoaMiddleware } = require('dos-protection-system');
 
 const app = new Koa();
 
-// DDoS koruması ekle
+// DoS koruması ekle
 app.use(createKoaMiddleware({
   maxRequestsPerMinute: 100,
   blockedCountries: ['CN']
@@ -84,14 +84,14 @@ app.listen(3000);
 
 ```javascript
 const fastify = require('fastify');
-const { createFastifyMiddleware } = require('ddos-protection-system');
+const { createFastifyMiddleware } = require('dos-protection-system');
 
 const app = fastify();
 
 // Express uyumluluğu için kayıt
 await app.register(require('fastify-express'));
 
-// DDoS koruması ekle
+// dos koruması ekle
 app.use(createFastifyMiddleware({
   maxRequestsPerMinute: 100
 }));
@@ -180,7 +180,7 @@ app.listen(3000);
 {
   logLevel: 'info',             // debug, info, warn, error
   logToFile: true,              // Dosya loglama
-  logFilePath: './logs/ddos.log' // Log dosyası yolu
+  logFilePath: './logs/dos.log' // Log dosyası yolu
 }
 ```
 
@@ -250,7 +250,7 @@ Sistem otomatik olarak JSON konfigürasyon dosyalarını yükler:
 ### İstatistikleri Al (Get Statistics)
 
 ```javascript
-const protection = new DDoSProtection(options);
+const protection = new dosProtection(options);
 const stats = await protection.getStats();
 
 console.log(stats);
@@ -428,7 +428,7 @@ CMD ["npm", "start"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ddos-protected-app
+  name: dos-protected-app
 spec:
   replicas: 3
   template:
@@ -494,7 +494,7 @@ server {
 Sorun giderme için debug loglamayı etkinleştirin:
 
 ```javascript
-const protection = new DDoSProtection({
+const protection = new dosProtection({
   logLevel: 'debug',
   logToFile: true
 });
@@ -515,6 +515,6 @@ MIT License - LICENSE dosyasını inceleyin
 ## Destek (Support)
 
 Destek ve sorularınız için:
-- GitHub Issues: [Issue açın](https://github.com/amhunter1/ddos-Protection/issues)
+- GitHub Issues: [Issue açın](https://github.com/amhunter1/dos-Protection/issues)
 - Email: gfwilliamtr@gmail.com
 - Discord: gfwilliam
