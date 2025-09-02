@@ -1,6 +1,6 @@
 # DDoS Protection System for Node.js
 
-[![npm version](https://badge.fury.io/js/ddos-protection-system.svg)](https://badge.fury.io/js/ddos-protection-system)
+[![npm version](https://badge.fury.io/js/ddos-Protection.svg)](https://badge.fury.io/js/ddos-protection-system)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive, production-ready DDoS protection middleware for Node.js applications with advanced detection capabilities, rate limiting, geographic filtering, and behavioral analysis.
