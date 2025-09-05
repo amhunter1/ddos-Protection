@@ -7,7 +7,7 @@ A comprehensive, production-ready dos protection middleware for Node.js applicat
 
 ## Özellikler (Features)
 
-- **Rate Limiting**: Dakika, saat ve gün bazlı istek sınırlandırma
+- **Rate Limiting**: Dakika, saat ve gün bazlı istek sınırlandırma 
 - **Burst Protection**: Ani trafik artışlarının tespiti
 - **Geographic Filtering**: Ülke bazlı erişim kontrolü
 - **User Agent Filtering**: Şüpheli user agent'ların engellenmesi
