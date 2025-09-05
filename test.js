@@ -3,7 +3,7 @@ const { DDoSProtection, createDDoSProtection } = require('./src/middleware/ddosP
 // Test configuration validation
 console.log('Testing DDoS Protection System...\n');
 
-// Test 1: Valid configuration
+// Test 1: Valid configuration 
 try {
   const protection = new DDoSProtection({
     maxRequestsPerMinute: 100,
