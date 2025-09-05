@@ -3,7 +3,7 @@ const { DDoSProtection, createDDoSProtection } = require('./src/middleware/ddosP
 module.exports = {
   DDoSProtection,
   createDDoSProtection,
-
+ 
   createExpressMiddleware: createDDoSProtection,
   createKoaMiddleware: (options) => {
     const protection = new DDoSProtection(options);
